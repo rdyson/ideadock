@@ -72,7 +72,9 @@ export async function triggerResearch(ideaId: string): Promise<void> {
       ],
     });
 
-    const textBlock = message.content.find((b) => b.type === "text");
+    const textBlock = message.content.find(
+      (b: (typeof message.content)[number]) => b.type === "text",
+    );
     if (!textBlock || textBlock.type !== "text") {
       throw new Error("No text block in Claude response");
     }
