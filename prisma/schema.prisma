@@ -1,0 +1,48 @@
+// IdeaDock Prisma schema
+// See bead id-6en for scope.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum IdeaStatus {
+  PENDING
+  RESEARCHING
+  READY
+}
+
+enum ResearchCategory {
+  MARKET_SIZE
+  COMPETITORS
+  TRENDS
+  CUSTOMER_SEGMENTS
+  RISKS
+}
+
+model Idea {
+  id             String            @id @default(cuid())
+  title          String
+  rawText        String
+  status         IdeaStatus        @default(PENDING)
+  readinessScore Int               @default(0)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  sections       ResearchSection[]
+}
+
+model ResearchSection {
+  id        String           @id @default(cuid())
+  ideaId    String
+  idea      Idea             @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  category  ResearchCategory
+  summary   String
+  sources   Json
+  createdAt DateTime         @default(now())
+
+  @@index([ideaId])
+}
