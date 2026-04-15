@@ -34,3 +34,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Gas Town workspace artifacts
+.remember/
+.runtime/
+.logs/
+.claude/
+mail/
+state.json
+__pycache__/
+.beads/*.db
+.beads/*.db-journal
