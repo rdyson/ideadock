@@ -1,19 +1,20 @@
 // IdeaDock Prisma schema
-// See bead id-6en for scope.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum IdeaStatus {
   PENDING
   RESEARCHING
   READY
+  ERROR
 }
 
 enum ResearchCategory {
@@ -26,6 +27,7 @@ enum ResearchCategory {
 
 model Idea {
   id             String            @id @default(cuid())
+  userId         String
   title          String
   rawText        String
   status         IdeaStatus        @default(PENDING)
@@ -41,7 +43,7 @@ model ResearchSection {
   idea      Idea             @relation(fields: [ideaId], references: [id], onDelete: Cascade)
   category  ResearchCategory
   summary   String
-  sources   Json
+  sources   Json             @default("[]")
   createdAt DateTime         @default(now())
 
   @@index([ideaId])
