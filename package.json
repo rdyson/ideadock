@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:generate": "dotenv -e .env.local -- npx prisma generate",
+    "db:migrate": "dotenv -e .env.local -- npx prisma migrate dev",
+    "db:reset": "dotenv -e .env.local -- npx prisma migrate reset",
+    "db:studio": "dotenv -e .env.local -- npx prisma studio"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.89.0",
@@ -21,6 +25,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.35",
     "postcss": "^8",
