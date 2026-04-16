@@ -45,5 +45,4 @@ next-env.d.ts
 mail/
 state.json
 __pycache__/
-.beads/*.db
-.beads/*.db-journal
+.beads/
