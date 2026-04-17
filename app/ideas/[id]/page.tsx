@@ -96,9 +96,20 @@ export default async function IdeaPage({
               key={s.id}
               className="border border-black/10 dark:border-white/15 rounded-lg p-4"
             >
-              <h2 className="text-sm font-semibold mb-2">
-                {CATEGORY_LABEL[s.category]}
-              </h2>
+              <div className="flex items-baseline justify-between gap-3 mb-2">
+                <h2 className="text-sm font-semibold">
+                  {CATEGORY_LABEL[s.category]}
+                </h2>
+                <span className="text-xs tabular-nums text-black/60 dark:text-white/60">
+                  {s.score}/20
+                </span>
+              </div>
+              <div className="h-1.5 w-full rounded bg-black/10 dark:bg-white/10 overflow-hidden mb-3">
+                <div
+                  className="h-full bg-foreground transition-all"
+                  style={{ width: `${(s.score / 20) * 100}%` }}
+                />
+              </div>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">
                 {s.summary}
               </p>
