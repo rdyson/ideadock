@@ -43,6 +43,7 @@ model ResearchSection {
   idea      Idea             @relation(fields: [ideaId], references: [id], onDelete: Cascade)
   category  ResearchCategory
   summary   String
+  score     Int              @default(0)
   sources   Json             @default("[]")
   createdAt DateTime         @default(now())
 

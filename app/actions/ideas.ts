@@ -5,27 +5,40 @@ import { prisma } from "@/lib/prisma";
 import { anthropic, RESEARCH_MODEL } from "@/lib/anthropic";
 import { createClient } from "@/lib/supabase/server";
 
-const RESEARCH_PROMPT = `You are a startup market research analyst. Given a raw idea, return ONLY valid JSON with no preamble or markdown fences:
+const RESEARCH_PROMPT = `You are a startup market research analyst. Score the idea on a transparent rubric: five categories, each 0-20, total readiness is their sum (0-100).
+
+Rubric (what a 20 looks like in each):
+- MARKET_SIZE (0-20): large, growing, reachable TAM with clear willingness-to-pay
+- COMPETITORS (0-20): differentiated positioning; incumbents leave a real opening
+- TRENDS (0-20): strong tailwinds (regulatory, technological, behavioral) over the next 2-3 years
+- CUSTOMER_SEGMENTS (0-20): well-defined segment with acute pain and identifiable acquisition channel
+- RISKS (0-20): manageable execution, regulatory, and capital risk; higher score = lower risk
+
+Return ONLY valid JSON with no preamble or markdown fences. The "summary" for each section must begin with one sentence of scoring rationale, then 1-2 sentences of analysis.
 {
-  "readinessScore": <integer 0-100>,
   "sections": [
-    { "category": "MARKET_SIZE", "summary": "<2-3 sentences>", "sources": [] },
-    { "category": "COMPETITORS", "summary": "<2-3 sentences>", "sources": [] },
-    { "category": "TRENDS", "summary": "<2-3 sentences>", "sources": [] },
-    { "category": "CUSTOMER_SEGMENTS", "summary": "<2-3 sentences>", "sources": [] },
-    { "category": "RISKS", "summary": "<2-3 sentences>", "sources": [] }
+    { "category": "MARKET_SIZE", "score": <integer 0-20>, "summary": "<2-3 sentences, first sentence = score rationale>", "sources": [] },
+    { "category": "COMPETITORS", "score": <integer 0-20>, "summary": "<...>", "sources": [] },
+    { "category": "TRENDS", "score": <integer 0-20>, "summary": "<...>", "sources": [] },
+    { "category": "CUSTOMER_SEGMENTS", "score": <integer 0-20>, "summary": "<...>", "sources": [] },
+    { "category": "RISKS", "score": <integer 0-20>, "summary": "<...>", "sources": [] }
   ]
 }
 Idea: {rawText}`;
 
 type ResearchResponse = {
-  readinessScore: number;
   sections: Array<{
     category: ResearchCategory;
+    score: number;
     summary: string;
     sources: Prisma.InputJsonValue;
   }>;
 };
+
+function clampScore(n: unknown): number {
+  const v = typeof n === "number" && Number.isFinite(n) ? Math.round(n) : 0;
+  return Math.max(0, Math.min(20, v));
+}
 
 export async function createIdea(rawText: string): Promise<string> {
   const supabase = createClient();
@@ -81,20 +94,22 @@ export async function triggerResearch(ideaId: string): Promise<void> {
 
     const parsed = JSON.parse(textBlock.text) as ResearchResponse;
 
+    const scoredSections = parsed.sections.map((s) => ({
+      ideaId,
+      category: s.category,
+      score: clampScore(s.score),
+      summary: s.summary,
+      sources: s.sources ?? [],
+    }));
+    const readinessScore = scoredSections.reduce((acc, s) => acc + s.score, 0);
+
     await prisma.$transaction([
-      prisma.researchSection.createMany({
-        data: parsed.sections.map((s) => ({
-          ideaId,
-          category: s.category,
-          summary: s.summary,
-          sources: s.sources ?? [],
-        })),
-      }),
+      prisma.researchSection.createMany({ data: scoredSections }),
       prisma.idea.update({
         where: { id: ideaId },
         data: {
           status: "READY",
-          readinessScore: parsed.readinessScore,
+          readinessScore,
         },
       }),
     ]);

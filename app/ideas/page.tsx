@@ -5,10 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 
 const STATUS_STYLES: Record<IdeaStatus, string> = {
-  PENDING: "bg-gray-100 text-gray-700",
-  RESEARCHING: "bg-blue-100 text-blue-700",
-  READY: "bg-green-100 text-green-700",
-  ERROR: "bg-red-100 text-red-700",
+  PENDING: "bg-amber-100 text-amber-800",
+  RESEARCHING: "bg-amber-100 text-amber-800",
+  READY: "bg-green-100 text-green-800",
+  ERROR: "bg-red-100 text-red-800",
 };
 
 const DATE_FORMAT: Intl.DateTimeFormatOptions = {
@@ -40,28 +40,31 @@ export default async function IdeasPage() {
   });
 
   return (
-    <main className="min-h-screen p-6 sm:p-10 max-w-4xl mx-auto">
-      <header className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-semibold">Ideas</h1>
+    <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+      <header className="flex items-center justify-between gap-4 mb-8">
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
+          Ideas
+        </h1>
         <Link
           href="/ideas/new"
-          className="rounded-md bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 transition-opacity"
+          className="rounded-md bg-foreground text-background px-3 sm:px-4 py-2 text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap"
         >
           + New Idea
         </Link>
       </header>
 
       {ideas.length === 0 ? (
-        <div className="border border-dashed border-black/[.15] dark:border-white/[.2] rounded-lg p-10 text-center">
+        <div className="border border-dashed border-black/[.15] dark:border-white/[.2] rounded-lg p-8 sm:p-12 text-center">
           <p className="text-lg font-medium mb-2">No ideas yet</p>
-          <p className="text-sm text-black/60 dark:text-white/60 mb-4">
-            Capture your first idea to get started.
+          <p className="text-sm text-black/60 dark:text-white/60 mb-6 max-w-sm mx-auto">
+            Drop in a rough idea and we&apos;ll research market size,
+            competitors, trends, customer segments, and risks.
           </p>
           <Link
             href="/ideas/new"
             className="inline-block rounded-md bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 transition-opacity"
           >
-            + New Idea
+            + Capture your first idea
           </Link>
         </div>
       ) : (

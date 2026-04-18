@@ -37,7 +37,7 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
+    <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-10">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-semibold mb-6">Sign up</h1>
         {sent ? (
