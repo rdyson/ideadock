@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { Prisma, ResearchCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { anthropic, RESEARCH_MODEL } from "@/lib/anthropic";
@@ -65,6 +66,69 @@ export async function createIdea(rawText: string): Promise<string> {
   void triggerResearch(idea.id);
 
   return idea.id;
+}
+
+async function requireUserId(): Promise<string> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error("Not authenticated");
+  }
+  return user.id;
+}
+
+async function assertIdeaOwner(ideaId: string, userId: string): Promise<void> {
+  const idea = await prisma.idea.findUnique({
+    where: { id: ideaId },
+    select: { userId: true },
+  });
+  if (!idea || idea.userId !== userId) {
+    throw new Error("Idea not found");
+  }
+}
+
+export async function updateIdea(
+  ideaId: string,
+  rawText: string,
+): Promise<void> {
+  const userId = await requireUserId();
+  await assertIdeaOwner(ideaId, userId);
+
+  const trimmed = rawText.trim();
+  if (trimmed.length < 3) {
+    throw new Error("Idea is too short");
+  }
+  const title = trimmed.slice(0, 60);
+
+  await prisma.idea.update({
+    where: { id: ideaId },
+    data: { rawText: trimmed, title },
+  });
+}
+
+export async function deleteIdea(ideaId: string): Promise<void> {
+  const userId = await requireUserId();
+  await assertIdeaOwner(ideaId, userId);
+
+  await prisma.idea.delete({ where: { id: ideaId } });
+  redirect("/ideas");
+}
+
+export async function rerunResearch(ideaId: string): Promise<void> {
+  const userId = await requireUserId();
+  await assertIdeaOwner(ideaId, userId);
+
+  await prisma.$transaction([
+    prisma.researchSection.deleteMany({ where: { ideaId } }),
+    prisma.idea.update({
+      where: { id: ideaId },
+      data: { status: "PENDING", readinessScore: 0 },
+    }),
+  ]);
+
+  void triggerResearch(ideaId);
 }
 
 export async function triggerResearch(ideaId: string): Promise<void> {

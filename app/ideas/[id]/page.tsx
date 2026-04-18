@@ -4,7 +4,8 @@ import { ResearchCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import AutoRefresh from "./AutoRefresh";
-import RetryButton from "./RetryButton";
+import DeleteButton from "./DeleteButton";
+import RerunButton from "./RerunButton";
 
 const CATEGORY_LABEL: Record<ResearchCategory, string> = {
   MARKET_SIZE: "Market Size",
@@ -65,7 +66,7 @@ export default async function IdeaPage({
         <span>Back to Ideas</span>
       </Link>
 
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="flex items-start justify-between gap-4 mb-4">
         <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
           {idea.title}
         </h1>
@@ -74,6 +75,17 @@ export default async function IdeaPage({
         >
           {idea.status}
         </span>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <Link
+          href={`/ideas/${idea.id}/edit`}
+          className="rounded-md border border-black/15 dark:border-white/20 px-3 py-1.5 text-sm font-medium hover:bg-black/[.04] dark:hover:bg-white/[.06] transition-colors"
+        >
+          Edit
+        </Link>
+        {!isInFlight && <RerunButton ideaId={idea.id} />}
+        <DeleteButton ideaId={idea.id} />
       </div>
 
       <div className="mb-8">
@@ -130,8 +142,10 @@ export default async function IdeaPage({
 
       {idea.status === "ERROR" && (
         <div className="border border-red-500/40 rounded-lg p-4">
-          <p className="text-sm mb-3">Research failed.</p>
-          <RetryButton ideaId={idea.id} />
+          <p className="text-sm">
+            Research failed. Use “Rerun Research” above to try again, or edit
+            the idea and rerun.
+          </p>
         </div>
       )}
     </main>
