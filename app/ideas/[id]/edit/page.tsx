@@ -4,11 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import EditIdeaForm from "./EditIdeaForm";
 
-export default async function EditIdeaPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function EditIdeaPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
   const {
     data: { user },
@@ -36,13 +32,11 @@ export default async function EditIdeaPage({
         <span aria-hidden>←</span>
         <span>Back to idea</span>
       </Link>
-      <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6">
-        Edit idea
-      </h1>
+      <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6">Edit idea</h1>
       <EditIdeaForm ideaId={idea.id} initialText={idea.rawText} />
       <p className="text-xs text-black/60 dark:text-white/60 mt-4">
-        After saving, use “Rerun Research” on the idea page to refresh the
-        research based on your edits.
+        After saving, use “Rerun Research” on the idea page to refresh the research based on your
+        edits.
       </p>
     </main>
   );

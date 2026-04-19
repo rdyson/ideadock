@@ -89,17 +89,17 @@ Supabase auth sends confirmation emails locally via Inbucket: [http://localhost:
 
 ## Useful Commands
 
-| Command | What it does |
-|---------|-------------|
-| `npm run dev` | Start Next.js dev server |
-| `npm run build` | Production build |
+| Command               | What it does                                  |
+| --------------------- | --------------------------------------------- |
+| `npm run dev`         | Start Next.js dev server                      |
+| `npm run build`       | Production build                              |
 | `npm run db:generate` | Regenerate Prisma client after schema changes |
-| `npm run db:migrate` | Create and run a new migration |
-| `npm run db:reset` | Drop all tables and re-migrate (destructive) |
-| `npm run db:studio` | Open Prisma Studio (DB browser) |
-| `supabase start` | Start local Supabase stack |
-| `supabase stop` | Stop local Supabase stack |
-| `supabase db reset` | Reset local Supabase DB |
+| `npm run db:migrate`  | Create and run a new migration                |
+| `npm run db:reset`    | Drop all tables and re-migrate (destructive)  |
+| `npm run db:studio`   | Open Prisma Studio (DB browser)               |
+| `supabase start`      | Start local Supabase stack                    |
+| `supabase stop`       | Stop local Supabase stack                     |
+| `supabase db reset`   | Reset local Supabase DB                       |
 
 ## Connecting to Remote Supabase (Dev/Staging)
 

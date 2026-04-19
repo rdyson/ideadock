@@ -28,11 +28,7 @@ function readinessBarColor(score: number): string {
   return "bg-red-500";
 }
 
-export default async function IdeaPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function IdeaPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
   const {
     data: { user },
@@ -51,8 +47,7 @@ export default async function IdeaPage({
     notFound();
   }
 
-  const isInFlight =
-    idea.status === "PENDING" || idea.status === "RESEARCHING";
+  const isInFlight = idea.status === "PENDING" || idea.status === "RESEARCHING";
 
   return (
     <main className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
@@ -67,12 +62,8 @@ export default async function IdeaPage({
       </Link>
 
       <div className="flex items-start justify-between gap-4 mb-3">
-        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-          {idea.title}
-        </h1>
-        <span
-          className={`text-xs font-medium px-2 py-1 rounded ${STATUS_BADGE[idea.status]}`}
-        >
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">{idea.title}</h1>
+        <span className={`text-xs font-medium px-2 py-1 rounded ${STATUS_BADGE[idea.status]}`}>
           {idea.status}
         </span>
       </div>
@@ -117,14 +108,9 @@ export default async function IdeaPage({
       {idea.status === "READY" && (
         <div className="grid gap-4">
           {idea.sections.map((s) => (
-            <div
-              key={s.id}
-              className="border border-black/10 dark:border-white/15 rounded-lg p-4"
-            >
+            <div key={s.id} className="border border-black/10 dark:border-white/15 rounded-lg p-4">
               <div className="flex items-baseline justify-between gap-3 mb-2">
-                <h2 className="text-sm font-semibold">
-                  {CATEGORY_LABEL[s.category]}
-                </h2>
+                <h2 className="text-sm font-semibold">{CATEGORY_LABEL[s.category]}</h2>
                 <span className="text-xs tabular-nums text-black/60 dark:text-white/60">
                   {s.score}/20
                 </span>
@@ -135,9 +121,7 @@ export default async function IdeaPage({
                   style={{ width: `${(s.score / 20) * 100}%` }}
                 />
               </div>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                {s.summary}
-              </p>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{s.summary}</p>
             </div>
           ))}
         </div>
@@ -156,8 +140,7 @@ export default async function IdeaPage({
       {idea.status === "ERROR" && (
         <div className="border border-red-500/40 rounded-lg p-4">
           <p className="text-sm">
-            Research failed. Use “Rerun Research” above to try again, or edit
-            the idea and rerun.
+            Research failed. Use “Rerun Research” above to try again, or edit the idea and rerun.
           </p>
         </div>
       )}

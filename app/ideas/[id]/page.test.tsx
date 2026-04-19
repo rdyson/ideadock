@@ -103,23 +103,17 @@ function readyIdea() {
 describe("IdeaPage", () => {
   it("notFound when unauthenticated", async () => {
     getUserMock.mockResolvedValue({ data: { user: null } });
-    await expect(
-      IdeaPage({ params: { id: "idea-1" } }),
-    ).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(IdeaPage({ params: { id: "idea-1" } })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
   it("notFound when idea does not exist", async () => {
     findUniqueMock.mockResolvedValue(null);
-    await expect(
-      IdeaPage({ params: { id: "idea-1" } }),
-    ).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(IdeaPage({ params: { id: "idea-1" } })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
   it("notFound when idea belongs to a different user", async () => {
     findUniqueMock.mockResolvedValue({ ...readyIdea(), userId: "someone-else" });
-    await expect(
-      IdeaPage({ params: { id: "idea-1" } }),
-    ).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(IdeaPage({ params: { id: "idea-1" } })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
   it("renders the full rawText under the title", async () => {
@@ -128,9 +122,7 @@ describe("IdeaPage", () => {
       rawText: "The full multi-sentence description of my idea.",
     });
     render(await IdeaPage({ params: { id: "idea-1" } }));
-    expect(
-      screen.getByText("The full multi-sentence description of my idea."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("The full multi-sentence description of my idea.")).toBeInTheDocument();
   });
 
   it("renders a score per category with per-category values when READY", async () => {

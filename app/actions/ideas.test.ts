@@ -150,9 +150,7 @@ describe("triggerResearch", () => {
         }),
       ]),
     });
-    const updateCall = updateIdeaMock.mock.calls.find(
-      ([arg]) => arg?.data?.status === "READY",
-    );
+    const updateCall = updateIdeaMock.mock.calls.find(([arg]) => arg?.data?.status === "READY");
     expect(updateCall?.[0]).toEqual({
       where: { id: "idea-1" },
       data: {
@@ -165,15 +163,11 @@ describe("triggerResearch", () => {
 
   it("falls back to keeping existing title when Claude omits title", async () => {
     updateIdeaMock.mockResolvedValue({ id: "idea-notitle", rawText: "x" });
-    anthropicCreateMock.mockResolvedValue(
-      validClaudeResponse([10, 10, 10, 10, 10], OMIT_TITLE),
-    );
+    anthropicCreateMock.mockResolvedValue(validClaudeResponse([10, 10, 10, 10, 10], OMIT_TITLE));
 
     await triggerResearch("idea-notitle");
 
-    const readyCall = updateIdeaMock.mock.calls.find(
-      ([arg]) => arg?.data?.status === "READY",
-    );
+    const readyCall = updateIdeaMock.mock.calls.find(([arg]) => arg?.data?.status === "READY");
     expect(readyCall?.[0].data.title).toBeUndefined();
     expect(readyCall?.[0].data.status).toBe("READY");
   });
@@ -181,15 +175,11 @@ describe("triggerResearch", () => {
   it("trims whitespace and caps Claude-generated title at 80 chars", async () => {
     updateIdeaMock.mockResolvedValue({ id: "idea-long", rawText: "x" });
     const longTitle = "  " + "t".repeat(200) + "  ";
-    anthropicCreateMock.mockResolvedValue(
-      validClaudeResponse([10, 10, 10, 10, 10], longTitle),
-    );
+    anthropicCreateMock.mockResolvedValue(validClaudeResponse([10, 10, 10, 10, 10], longTitle));
 
     await triggerResearch("idea-long");
 
-    const readyCall = updateIdeaMock.mock.calls.find(
-      ([arg]) => arg?.data?.status === "READY",
-    );
+    const readyCall = updateIdeaMock.mock.calls.find(([arg]) => arg?.data?.status === "READY");
     expect(readyCall?.[0].data.title).toBe("t".repeat(80));
   });
 
@@ -228,11 +218,11 @@ describe("triggerResearch", () => {
     expect(sections.find((s: { category: string }) => s.category === "MARKET_SIZE").score).toBe(20);
     expect(sections.find((s: { category: string }) => s.category === "COMPETITORS").score).toBe(0);
     expect(sections.find((s: { category: string }) => s.category === "TRENDS").score).toBe(0);
-    expect(sections.find((s: { category: string }) => s.category === "CUSTOMER_SEGMENTS").score).toBe(16);
+    expect(
+      sections.find((s: { category: string }) => s.category === "CUSTOMER_SEGMENTS").score,
+    ).toBe(16);
 
-    const readyCall = updateIdeaMock.mock.calls.find(
-      ([arg]) => arg?.data?.status === "READY",
-    );
+    const readyCall = updateIdeaMock.mock.calls.find(([arg]) => arg?.data?.status === "READY");
     expect(readyCall?.[0].data.readinessScore).toBe(46);
   });
 
@@ -243,9 +233,7 @@ describe("triggerResearch", () => {
 
     await triggerResearch("idea-3");
 
-    const errorCall = updateIdeaMock.mock.calls.find(
-      ([arg]) => arg?.data?.status === "ERROR",
-    );
+    const errorCall = updateIdeaMock.mock.calls.find(([arg]) => arg?.data?.status === "ERROR");
     expect(errorCall?.[0]).toEqual({
       where: { id: "idea-3" },
       data: { status: "ERROR" },
@@ -263,9 +251,7 @@ describe("triggerResearch", () => {
 
     await triggerResearch("idea-4");
 
-    const errorCall = updateIdeaMock.mock.calls.find(
-      ([arg]) => arg?.data?.status === "ERROR",
-    );
+    const errorCall = updateIdeaMock.mock.calls.find(([arg]) => arg?.data?.status === "ERROR");
     expect(errorCall?.[0].data.status).toBe("ERROR");
     errorSpy.mockRestore();
   });
@@ -277,9 +263,7 @@ describe("triggerResearch", () => {
 
     await triggerResearch("idea-5");
 
-    const errorCall = updateIdeaMock.mock.calls.find(
-      ([arg]) => arg?.data?.status === "ERROR",
-    );
+    const errorCall = updateIdeaMock.mock.calls.find(([arg]) => arg?.data?.status === "ERROR");
     expect(errorCall?.[0].data.status).toBe("ERROR");
     errorSpy.mockRestore();
   });

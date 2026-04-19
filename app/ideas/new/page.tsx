@@ -46,9 +46,7 @@ export default function NewIdeaPage() {
         <span aria-hidden>←</span>
         <span>Back to Ideas</span>
       </Link>
-      <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6">
-        New idea
-      </h1>
+      <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6">New idea</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <label className="flex flex-col gap-1">
           <span className="text-sm">Describe your idea</span>

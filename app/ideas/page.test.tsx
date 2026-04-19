@@ -25,13 +25,15 @@ beforeEach(() => {
   getUserMock.mockResolvedValue({ data: { user: { id: "u1" } } });
 });
 
-function idea(overrides: Partial<{
-  id: string;
-  title: string;
-  status: "PENDING" | "RESEARCHING" | "READY" | "ERROR";
-  readinessScore: number;
-  createdAt: Date;
-}> = {}) {
+function idea(
+  overrides: Partial<{
+    id: string;
+    title: string;
+    status: "PENDING" | "RESEARCHING" | "READY" | "ERROR";
+    readinessScore: number;
+    createdAt: Date;
+  }> = {},
+) {
   return {
     id: "idea-1",
     title: "My Idea",

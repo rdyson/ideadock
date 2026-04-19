@@ -42,9 +42,7 @@ export default async function IdeasPage() {
   return (
     <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
       <header className="flex items-center justify-between gap-4 mb-8">
-        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-          Ideas
-        </h1>
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">Ideas</h1>
         <Link
           href="/ideas/new"
           className="rounded-md bg-foreground text-background px-3 sm:px-4 py-2 text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap"
@@ -57,8 +55,8 @@ export default async function IdeasPage() {
         <div className="border border-dashed border-black/[.15] dark:border-white/[.2] rounded-lg p-8 sm:p-12 text-center">
           <p className="text-lg font-medium mb-2">No ideas yet</p>
           <p className="text-sm text-black/60 dark:text-white/60 mb-6 max-w-sm mx-auto">
-            Drop in a rough idea and we&apos;ll research market size,
-            competitors, trends, customer segments, and risks.
+            Drop in a rough idea and we&apos;ll research market size, competitors, trends, customer
+            segments, and risks.
           </p>
           <Link
             href="/ideas/new"

@@ -105,10 +105,7 @@ async function assertIdeaOwner(ideaId: string, userId: string): Promise<void> {
   }
 }
 
-export async function updateIdea(
-  ideaId: string,
-  rawText: string,
-): Promise<void> {
+export async function updateIdea(ideaId: string, rawText: string): Promise<void> {
   const userId = await requireUserId();
   await assertIdeaOwner(ideaId, userId);
 
@@ -200,11 +197,7 @@ export async function triggerResearch(ideaId: string): Promise<void> {
     await prisma.idea
       .update({ where: { id: ideaId }, data: { status: "ERROR" } })
       .catch((updateErr) => {
-        console.error(
-          "[triggerResearch] failed to mark ERROR",
-          ideaId,
-          updateErr,
-        );
+        console.error("[triggerResearch] failed to mark ERROR", ideaId, updateErr);
       });
   }
 }

@@ -35,8 +35,7 @@ export default function EditIdeaForm({
       router.push(`/ideas/${ideaId}`);
       router.refresh();
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to update idea";
+      const message = err instanceof Error ? err.message : "Failed to update idea";
       if (message === "Not authenticated") {
         router.push("/login");
         return;

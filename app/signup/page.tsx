@@ -41,9 +41,7 @@ export default function SignupPage() {
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-semibold mb-6">Sign up</h1>
         {sent ? (
-          <p className="text-sm">
-            Check your email for a confirmation link to finish signing up.
-          </p>
+          <p className="text-sm">Check your email for a confirmation link to finish signing up.</p>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <label className="flex flex-col gap-1">

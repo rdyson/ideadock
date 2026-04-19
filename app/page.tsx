@@ -60,9 +60,9 @@ export default async function Home() {
             Stop sitting on startup ideas.
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-black/70 dark:text-white/70 max-w-2xl mx-auto text-balance">
-            You know that note in your phone with 40 half-baked startup ideas you&apos;ll
-            look into eventually? IdeaDock researches them for you on autopilot and tells
-            you which ones are actually worth pursuing.
+            You know that note in your phone with 40 half-baked startup ideas you&apos;ll look into
+            eventually? IdeaDock researches them for you on autopilot and tells you which ones are
+            actually worth pursuing.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <Link
@@ -98,9 +98,7 @@ export default async function Home() {
                   {step.number}
                 </div>
                 <h3 className="mt-4 font-semibold">{step.title}</h3>
-                <p className="mt-2 text-sm text-black/70 dark:text-white/70">
-                  {step.body}
-                </p>
+                <p className="mt-2 text-sm text-black/70 dark:text-white/70">{step.body}</p>
               </div>
             ))}
           </div>
@@ -113,8 +111,8 @@ export default async function Home() {
             What we dig into
           </h2>
           <p className="mt-3 text-center text-black/70 dark:text-white/70 max-w-xl mx-auto">
-            Every idea gets researched across five categories that actually move the
-            needle on whether it&apos;s worth your time.
+            Every idea gets researched across five categories that actually move the needle on
+            whether it&apos;s worth your time.
           </p>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((feature) => (
@@ -123,9 +121,7 @@ export default async function Home() {
                 className="rounded-lg border border-black/[.08] dark:border-white/[.12] p-5"
               >
                 <h3 className="font-semibold">{feature.title}</h3>
-                <p className="mt-2 text-sm text-black/70 dark:text-white/70">
-                  {feature.body}
-                </p>
+                <p className="mt-2 text-sm text-black/70 dark:text-white/70">{feature.body}</p>
               </div>
             ))}
           </div>
