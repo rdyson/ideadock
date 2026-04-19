@@ -21,7 +21,14 @@ vi.mock("@prisma/client", () => ({ ResearchCategory: {} }));
 vi.mock("./AutoRefresh", () => ({
   default: () => <div data-testid="auto-refresh" />,
 }));
-vi.mock("./RetryButton", () => ({
+vi.mock("./DeleteButton", () => ({
+  default: ({ ideaId }: { ideaId: string }) => (
+    <button data-testid="delete" data-idea={ideaId}>
+      delete
+    </button>
+  ),
+}));
+vi.mock("./RerunButton", () => ({
   default: ({ ideaId }: { ideaId: string }) => (
     <button data-testid="retry" data-idea={ideaId}>
       retry
@@ -113,6 +120,17 @@ describe("IdeaPage", () => {
     await expect(
       IdeaPage({ params: { id: "idea-1" } }),
     ).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("renders the full rawText under the title", async () => {
+    findUniqueMock.mockResolvedValue({
+      ...readyIdea(),
+      rawText: "The full multi-sentence description of my idea.",
+    });
+    render(await IdeaPage({ params: { id: "idea-1" } }));
+    expect(
+      screen.getByText("The full multi-sentence description of my idea."),
+    ).toBeInTheDocument();
   });
 
   it("renders a score per category with per-category values when READY", async () => {

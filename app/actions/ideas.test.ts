@@ -53,7 +53,12 @@ beforeEach(() => {
   transactionMock.mockResolvedValue(undefined);
 });
 
-function validClaudeResponse(scores = [20, 18, 16, 14, 12]) {
+const OMIT_TITLE = Symbol("omit-title");
+
+function validClaudeResponse(
+  scores = [20, 18, 16, 14, 12],
+  title: string | typeof OMIT_TITLE = "Generated Title",
+) {
   const categories = [
     "MARKET_SIZE",
     "COMPETITORS",
@@ -61,20 +66,17 @@ function validClaudeResponse(scores = [20, 18, 16, 14, 12]) {
     "CUSTOMER_SEGMENTS",
     "RISKS",
   ] as const;
+  const payload: Record<string, unknown> = {
+    sections: categories.map((category, i) => ({
+      category,
+      score: scores[i],
+      summary: `${category} summary`,
+      sources: [],
+    })),
+  };
+  if (title !== OMIT_TITLE) payload.title = title;
   return {
-    content: [
-      {
-        type: "text",
-        text: JSON.stringify({
-          sections: categories.map((category, i) => ({
-            category,
-            score: scores[i],
-            summary: `${category} summary`,
-            sources: [],
-          })),
-        }),
-      },
-    ],
+    content: [{ type: "text", text: JSON.stringify(payload) }],
   };
 }
 
@@ -85,9 +87,9 @@ describe("createIdea", () => {
     expect(createIdeaMock).not.toHaveBeenCalled();
   });
 
-  it("creates idea with PENDING status, trimmed title, and returns id", async () => {
+  it("creates idea with PENDING status, placeholder title (120 chars), and returns id", async () => {
     getUserMock.mockResolvedValue({ data: { user: { id: "user-1" } } });
-    const longText = "a".repeat(120);
+    const longText = "a".repeat(200);
     createIdeaMock.mockResolvedValue({ id: "idea-123", rawText: longText });
     updateIdeaMock.mockResolvedValue({ id: "idea-123", rawText: longText });
     anthropicCreateMock.mockResolvedValue(validClaudeResponse());
@@ -98,7 +100,7 @@ describe("createIdea", () => {
     expect(createIdeaMock).toHaveBeenCalledWith({
       data: {
         userId: "user-1",
-        title: "a".repeat(60),
+        title: "a".repeat(120),
         rawText: longText,
         status: "PENDING",
       },
@@ -153,8 +155,42 @@ describe("triggerResearch", () => {
     );
     expect(updateCall?.[0]).toEqual({
       where: { id: "idea-1" },
-      data: { status: "READY", readinessScore: 80 },
+      data: {
+        status: "READY",
+        readinessScore: 80,
+        title: "Generated Title",
+      },
     });
+  });
+
+  it("falls back to keeping existing title when Claude omits title", async () => {
+    updateIdeaMock.mockResolvedValue({ id: "idea-notitle", rawText: "x" });
+    anthropicCreateMock.mockResolvedValue(
+      validClaudeResponse([10, 10, 10, 10, 10], OMIT_TITLE),
+    );
+
+    await triggerResearch("idea-notitle");
+
+    const readyCall = updateIdeaMock.mock.calls.find(
+      ([arg]) => arg?.data?.status === "READY",
+    );
+    expect(readyCall?.[0].data.title).toBeUndefined();
+    expect(readyCall?.[0].data.status).toBe("READY");
+  });
+
+  it("trims whitespace and caps Claude-generated title at 80 chars", async () => {
+    updateIdeaMock.mockResolvedValue({ id: "idea-long", rawText: "x" });
+    const longTitle = "  " + "t".repeat(200) + "  ";
+    anthropicCreateMock.mockResolvedValue(
+      validClaudeResponse([10, 10, 10, 10, 10], longTitle),
+    );
+
+    await triggerResearch("idea-long");
+
+    const readyCall = updateIdeaMock.mock.calls.find(
+      ([arg]) => arg?.data?.status === "READY",
+    );
+    expect(readyCall?.[0].data.title).toBe("t".repeat(80));
   });
 
   it("clamps out-of-range and non-numeric scores to [0,20]", async () => {

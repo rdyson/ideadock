@@ -66,7 +66,7 @@ export default async function IdeaPage({
         <span>Back to Ideas</span>
       </Link>
 
-      <div className="flex items-start justify-between gap-4 mb-4">
+      <div className="flex items-start justify-between gap-4 mb-3">
         <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
           {idea.title}
         </h1>
@@ -76,6 +76,10 @@ export default async function IdeaPage({
           {idea.status}
         </span>
       </div>
+
+      <p className="text-sm leading-relaxed whitespace-pre-wrap text-black/70 dark:text-white/70 mb-6">
+        {idea.rawText}
+      </p>
 
       <div className="flex flex-wrap items-center gap-2 mb-6">
         <Link

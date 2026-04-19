@@ -15,8 +15,9 @@ Rubric (what a 20 looks like in each):
 - CUSTOMER_SEGMENTS (0-20): well-defined segment with acute pain and identifiable acquisition channel
 - RISKS (0-20): manageable execution, regulatory, and capital risk; higher score = lower risk
 
-Return ONLY valid JSON with no preamble or markdown fences. The "summary" for each section must begin with one sentence of scoring rationale, then 1-2 sentences of analysis.
+Return ONLY valid JSON with no preamble or markdown fences. The "title" must be a concise, descriptive headline for the idea, under 80 characters, with no trailing punctuation. The "summary" for each section must begin with one sentence of scoring rationale, then 1-2 sentences of analysis.
 {
+  "title": "<concise title under 80 chars>",
   "sections": [
     { "category": "MARKET_SIZE", "score": <integer 0-20>, "summary": "<2-3 sentences, first sentence = score rationale>", "sources": [] },
     { "category": "COMPETITORS", "score": <integer 0-20>, "summary": "<...>", "sources": [] },
@@ -28,6 +29,7 @@ Return ONLY valid JSON with no preamble or markdown fences. The "summary" for ea
 Idea: {rawText}`;
 
 type ResearchResponse = {
+  title?: string;
   sections: Array<{
     category: ResearchCategory;
     score: number;
@@ -35,6 +37,20 @@ type ResearchResponse = {
     sources: Prisma.InputJsonValue;
   }>;
 };
+
+const TITLE_MAX = 80;
+const PLACEHOLDER_TITLE_MAX = 120;
+
+function placeholderTitle(rawText: string): string {
+  return rawText.slice(0, PLACEHOLDER_TITLE_MAX);
+}
+
+function cleanClaudeTitle(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim().replace(/\s+/g, " ");
+  if (trimmed.length === 0) return null;
+  return trimmed.slice(0, TITLE_MAX);
+}
 
 function clampScore(n: unknown): number {
   const v = typeof n === "number" && Number.isFinite(n) ? Math.round(n) : 0;
@@ -52,7 +68,7 @@ export async function createIdea(rawText: string): Promise<string> {
   }
 
   const trimmed = rawText.trim();
-  const title = trimmed.slice(0, 60);
+  const title = placeholderTitle(trimmed);
 
   const idea = await prisma.idea.create({
     data: {
@@ -100,7 +116,7 @@ export async function updateIdea(
   if (trimmed.length < 3) {
     throw new Error("Idea is too short");
   }
-  const title = trimmed.slice(0, 60);
+  const title = placeholderTitle(trimmed);
 
   await prisma.idea.update({
     where: { id: ideaId },
@@ -166,6 +182,7 @@ export async function triggerResearch(ideaId: string): Promise<void> {
       sources: s.sources ?? [],
     }));
     const readinessScore = scoredSections.reduce((acc, s) => acc + s.score, 0);
+    const generatedTitle = cleanClaudeTitle(parsed.title);
 
     await prisma.$transaction([
       prisma.researchSection.createMany({ data: scoredSections }),
@@ -174,6 +191,7 @@ export async function triggerResearch(ideaId: string): Promise<void> {
         data: {
           status: "READY",
           readinessScore,
+          ...(generatedTitle ? { title: generatedTitle } : {}),
         },
       }),
     ]);
