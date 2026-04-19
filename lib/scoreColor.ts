@@ -38,17 +38,18 @@ const PALETTE: Record<"red" | "orange" | "amber" | "lime" | "green", Palette> = 
 type Color = keyof typeof PALETTE;
 
 function bucket100(score: number): Color {
-  if (score <= 20) return "red";
-  if (score <= 40) return "orange";
-  if (score <= 60) return "amber";
-  if (score <= 80) return "lime";
+  if (score <= 30) return "red";
+  if (score <= 50) return "orange";
+  if (score <= 70) return "amber";
+  if (score <= 85) return "lime";
   return "green";
 }
 
 function bucket20(score: number): Color {
-  if (score <= 5) return "red";
+  if (score <= 6) return "red";
   if (score <= 10) return "orange";
-  if (score <= 15) return "lime";
+  if (score <= 14) return "amber";
+  if (score <= 17) return "lime";
   return "green";
 }
 
