@@ -169,7 +169,11 @@ export async function triggerResearch(ideaId: string): Promise<void> {
       throw new Error("No text block in Claude response");
     }
 
-    const parsed = JSON.parse(textBlock.text) as ResearchResponse;
+    let jsonText = textBlock.text.trim();
+    if (jsonText.startsWith("```")) {
+      jsonText = jsonText.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+    }
+    const parsed = JSON.parse(jsonText) as ResearchResponse;
 
     const scoredSections = parsed.sections.map((s) => ({
       ideaId,
