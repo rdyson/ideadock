@@ -23,8 +23,9 @@ const STATUS_BADGE: Record<string, string> = {
   ERROR: "bg-red-100 text-red-800",
 };
 
-export default async function IdeaPage({ params }: { params: { id: string } }) {
-  const supabase = createClient();
+export default async function IdeaPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -34,7 +35,7 @@ export default async function IdeaPage({ params }: { params: { id: string } }) {
   }
 
   const idea = await prisma.idea.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { sections: { orderBy: { createdAt: "asc" } } },
   });
 

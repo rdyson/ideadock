@@ -103,17 +103,23 @@ function readyIdea() {
 describe("IdeaPage", () => {
   it("notFound when unauthenticated", async () => {
     getUserMock.mockResolvedValue({ data: { user: null } });
-    await expect(IdeaPage({ params: { id: "idea-1" } })).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(IdeaPage({ params: Promise.resolve({ id: "idea-1" }) })).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
   });
 
   it("notFound when idea does not exist", async () => {
     findUniqueMock.mockResolvedValue(null);
-    await expect(IdeaPage({ params: { id: "idea-1" } })).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(IdeaPage({ params: Promise.resolve({ id: "idea-1" }) })).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
   });
 
   it("notFound when idea belongs to a different user", async () => {
     findUniqueMock.mockResolvedValue({ ...readyIdea(), userId: "someone-else" });
-    await expect(IdeaPage({ params: { id: "idea-1" } })).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(IdeaPage({ params: Promise.resolve({ id: "idea-1" }) })).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
   });
 
   it("renders the full rawText under the title", async () => {
@@ -121,13 +127,13 @@ describe("IdeaPage", () => {
       ...readyIdea(),
       rawText: "The full multi-sentence description of my idea.",
     });
-    render(await IdeaPage({ params: { id: "idea-1" } }));
+    render(await IdeaPage({ params: Promise.resolve({ id: "idea-1" }) }));
     expect(screen.getByText("The full multi-sentence description of my idea.")).toBeInTheDocument();
   });
 
   it("renders a score per category with per-category values when READY", async () => {
     findUniqueMock.mockResolvedValue(readyIdea());
-    render(await IdeaPage({ params: { id: "idea-1" } }));
+    render(await IdeaPage({ params: Promise.resolve({ id: "idea-1" }) }));
 
     expect(screen.getByText("Market Size")).toBeInTheDocument();
     expect(screen.getByText("Competitors")).toBeInTheDocument();
@@ -152,7 +158,7 @@ describe("IdeaPage", () => {
       readinessScore: 0,
       sections: [],
     });
-    render(await IdeaPage({ params: { id: "idea-1" } }));
+    render(await IdeaPage({ params: Promise.resolve({ id: "idea-1" }) }));
 
     expect(screen.getByTestId("auto-refresh")).toBeInTheDocument();
     expect(screen.getByText(/Researching/i)).toBeInTheDocument();
@@ -165,7 +171,7 @@ describe("IdeaPage", () => {
       status: "RESEARCHING",
       sections: [],
     });
-    render(await IdeaPage({ params: { id: "idea-1" } }));
+    render(await IdeaPage({ params: Promise.resolve({ id: "idea-1" }) }));
     expect(screen.getByTestId("auto-refresh")).toBeInTheDocument();
   });
 
@@ -176,7 +182,7 @@ describe("IdeaPage", () => {
       readinessScore: 0,
       sections: [],
     });
-    render(await IdeaPage({ params: { id: "idea-1" } }));
+    render(await IdeaPage({ params: Promise.resolve({ id: "idea-1" }) }));
     const retry = screen.getByTestId("retry");
     expect(retry).toHaveAttribute("data-idea", "idea-1");
     expect(screen.getByText(/Research failed/i)).toBeInTheDocument();
@@ -184,7 +190,7 @@ describe("IdeaPage", () => {
 
   it("renders the ERROR status badge with red style", async () => {
     findUniqueMock.mockResolvedValue({ ...readyIdea(), status: "ERROR" });
-    render(await IdeaPage({ params: { id: "idea-1" } }));
+    render(await IdeaPage({ params: Promise.resolve({ id: "idea-1" }) }));
     const badge = screen.getByText("ERROR");
     expect(badge.className).toMatch(/bg-red-100/);
   });

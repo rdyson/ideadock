@@ -4,8 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import EditIdeaForm from "./EditIdeaForm";
 
-export default async function EditIdeaPage({ params }: { params: { id: string } }) {
-  const supabase = createClient();
+export default async function EditIdeaPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -15,7 +16,7 @@ export default async function EditIdeaPage({ params }: { params: { id: string } 
   }
 
   const idea = await prisma.idea.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: { id: true, userId: true, rawText: true, title: true },
   });
 

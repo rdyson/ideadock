@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "./LogoutButton";
 
 export default async function Header() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

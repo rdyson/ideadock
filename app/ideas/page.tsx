@@ -19,7 +19,7 @@ const DATE_FORMAT: Intl.DateTimeFormatOptions = {
 };
 
 export default async function IdeasPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
