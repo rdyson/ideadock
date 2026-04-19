@@ -247,11 +247,14 @@ When your work is done, follow this checklist — **step 4 is REQUIRED**:
 
 ```
 [ ] 1. Run quality gates (ALL must pass):
-       - npm projects: npm run lint && npm run format && npm test
-       - Go projects:  go test ./... && go vet ./...
-[ ] 2. Stage changes:     git add <files>
-[ ] 3. Commit changes:    git commit -m "msg (issue-id)"
-[ ] 4. Self-clean:        gt done   ← MANDATORY FINAL STEP
+       - npm run lint && npm run format:check && npm test
+[ ] 2. Code review (REQUIRED — independent second opinion):
+       - Run: /review --branch
+       - Fix any CRITICAL or MAJOR findings before proceeding
+       - Grade B or better required
+[ ] 3. Stage changes:     git add <files>
+[ ] 4. Commit changes:    git commit -m "msg (issue-id)"
+[ ] 5. Self-clean:        gt done   ← MANDATORY FINAL STEP
 ```
 
 **Quality gates are not optional.** Worktrees may not trigger pre-commit hooks,
