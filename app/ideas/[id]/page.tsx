@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ResearchCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getScoreColor } from "@/lib/scoreColor";
 import { createClient } from "@/lib/supabase/server";
 import AutoRefresh from "./AutoRefresh";
 import DeleteButton from "./DeleteButton";
@@ -21,12 +22,6 @@ const STATUS_BADGE: Record<string, string> = {
   READY: "bg-green-100 text-green-800",
   ERROR: "bg-red-100 text-red-800",
 };
-
-function readinessBarColor(score: number): string {
-  if (score >= 70) return "bg-green-500";
-  if (score >= 40) return "bg-amber-500";
-  return "bg-red-500";
-}
 
 export default async function IdeaPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -99,7 +94,7 @@ export default async function IdeaPage({ params }: { params: { id: string } }) {
         </div>
         <div className="h-2 w-full rounded bg-black/10 dark:bg-white/10 overflow-hidden">
           <div
-            className={`h-full transition-all ${readinessBarColor(idea.readinessScore)}`}
+            className={`h-full transition-all ${getScoreColor(idea.readinessScore, 100, "bar")}`}
             style={{ width: `${idea.readinessScore}%` }}
           />
         </div>
@@ -108,7 +103,10 @@ export default async function IdeaPage({ params }: { params: { id: string } }) {
       {idea.status === "READY" && (
         <div className="grid gap-4">
           {idea.sections.map((s) => (
-            <div key={s.id} className="border border-black/10 dark:border-white/15 rounded-lg p-4">
+            <div
+              key={s.id}
+              className={`border border-black/10 dark:border-white/15 border-l-4 rounded-lg p-4 ${getScoreColor(s.score, 20, "border")} ${getScoreColor(s.score, 20, "tint")}`}
+            >
               <div className="flex items-baseline justify-between gap-3 mb-2">
                 <h2 className="text-sm font-semibold">{CATEGORY_LABEL[s.category]}</h2>
                 <span className="text-xs tabular-nums text-black/60 dark:text-white/60">
@@ -117,7 +115,7 @@ export default async function IdeaPage({ params }: { params: { id: string } }) {
               </div>
               <div className="h-1.5 w-full rounded bg-black/10 dark:bg-white/10 overflow-hidden mb-3">
                 <div
-                  className="h-full bg-foreground transition-all"
+                  className={`h-full transition-all ${getScoreColor(s.score, 20, "bar")}`}
                   style={{ width: `${(s.score / 20) * 100}%` }}
                 />
               </div>

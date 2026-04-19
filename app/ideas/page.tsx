@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { IdeaStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getScoreColor } from "@/lib/scoreColor";
 import { createClient } from "@/lib/supabase/server";
 
 const STATUS_STYLES: Record<IdeaStatus, string> = {
@@ -80,7 +81,14 @@ export default async function IdeasPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-sm tabular-nums text-black/70 dark:text-white/70">
+                  <span
+                    className="inline-flex items-center gap-1.5 text-sm tabular-nums text-black/70 dark:text-white/70"
+                    aria-label={`Readiness score ${idea.readinessScore} out of 100`}
+                  >
+                    <span
+                      aria-hidden
+                      className={`h-2.5 w-2.5 rounded-full ${getScoreColor(idea.readinessScore, 100, "dot")}`}
+                    />
                     {idea.readinessScore}
                   </span>
                   <span
