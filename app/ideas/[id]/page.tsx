@@ -77,9 +77,18 @@ export default async function IdeaPage({
         </span>
       </div>
 
-      <p className="text-sm leading-relaxed whitespace-pre-wrap text-black/70 dark:text-white/70 mb-6">
-        {idea.rawText}
-      </p>
+      <details className="mb-6 group">
+        <summary className="cursor-pointer text-sm text-black/60 dark:text-white/60 hover:text-foreground transition-colors select-none list-none inline-flex items-center gap-1">
+          <span aria-hidden className="transition-transform group-open:rotate-90">
+            ›
+          </span>
+          <span className="group-open:hidden">Show original idea</span>
+          <span className="hidden group-open:inline">Hide original idea</span>
+        </summary>
+        <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap text-black/70 dark:text-white/70">
+          {idea.rawText}
+        </p>
+      </details>
 
       <div className="flex flex-wrap items-center gap-2 mb-6">
         <Link
