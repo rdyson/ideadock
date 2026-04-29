@@ -8,7 +8,7 @@ An AI-powered idea research assistant for founders. Submit a raw idea; a researc
 
 ## Stack
 
-- Next.js 14 (App Router) + TypeScript
+- Next.js 16 (App Router) + TypeScript
 - Postgres via Supabase
 - Prisma ORM
 - Claude Sonnet 4.6 for the research agent
@@ -17,9 +17,8 @@ An AI-powered idea research assistant for founders. Submit a raw idea; a researc
 
 ## Prerequisites
 
-- Node.js 18+
-- Docker Desktop (for local Supabase)
-- Supabase CLI (`brew install supabase/tap/supabase`)
+- Node.js 20+
+- A Supabase cloud project
 - An [Anthropic API key](https://console.anthropic.com/)
 
 ## Local Development Setup
@@ -32,50 +31,33 @@ cd ideadock
 npm install
 ```
 
-### 2. Start local Supabase
-
-```bash
-supabase start
-```
-
-First run pulls Docker images (~5 min). Subsequent starts take ~30s.
-
-When it finishes, it prints your local credentials:
-
-```
-API URL: http://127.0.0.1:54321
-anon key: eyJ...
-service_role key: eyJ...
-DB URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
-Studio URL: http://127.0.0.1:54323
-Inbucket URL: http://127.0.0.1:54324
-```
-
-### 3. Create your `.env.local`
+### 2. Create your `.env.local`
 
 ```bash
 cp .env.local.example .env.local
 ```
 
-Fill in using the values from `supabase start`:
+Fill in the remote Supabase and Anthropic values:
 
 ```
-DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
-DIRECT_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
-NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54321"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon key from above>"
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:6543/postgres?pgbouncer=true&connection_limit=1"
+DIRECT_URL="postgresql://USER:PASSWORD@HOST:5432/postgres"
+NEXT_PUBLIC_SUPABASE_URL="https://YOUR-PROJECT-REF.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon key from Supabase Project Settings > API>"
 ANTHROPIC_API_KEY="<your Anthropic API key>"
 ```
 
-### 4. Run database migrations
+Use the Supabase transaction pooler URL for `DATABASE_URL` and the direct database URL for `DIRECT_URL`.
+
+### 3. Apply database migrations
 
 ```bash
-npm run db:migrate
+npx prisma migrate deploy
 ```
 
-This creates the `Idea` and `ResearchSection` tables in your local Postgres.
+This creates or updates the `Idea` and `ResearchSection` tables in the Supabase Postgres database.
 
-### 5. Start the dev server
+### 4. Start the dev server
 
 ```bash
 npm run dev
@@ -83,36 +65,36 @@ npm run dev
 
 Open [http://localhost:3000/signup](http://localhost:3000/signup) to create an account, then submit your first idea.
 
-### 6. Check email confirmations
+## Supabase Auth Configuration
 
-Supabase auth sends confirmation emails locally via Inbucket: [http://localhost:54324](http://localhost:54324)
+In Supabase Dashboard, go to **Authentication > URL Configuration**.
+
+Set **Site URL** to the production app URL:
+
+```
+https://your-production-domain.com
+```
+
+Add redirect URLs for local development, production, and deploy previews:
+
+```
+http://localhost:3000/auth/callback
+https://your-production-domain.com/auth/callback
+https://*-your-vercel-team.vercel.app/auth/callback
+```
+
+The signup flow passes `emailRedirectTo` from the current browser origin. Supabase will only honor that URL if it is listed as an allowed redirect URL; otherwise confirmation emails can fall back to the configured Site URL.
+
+If confirmation emails still point at the wrong host, check **Authentication > Email Templates** and make sure the confirmation template uses Supabase's redirect-aware confirmation URL instead of hardcoding a localhost URL.
 
 ## Useful Commands
 
-| Command               | What it does                                  |
-| --------------------- | --------------------------------------------- |
-| `npm run dev`         | Start Next.js dev server                      |
-| `npm run build`       | Production build                              |
-| `npm run db:generate` | Regenerate Prisma client after schema changes |
-| `npm run db:migrate`  | Create and run a new migration                |
-| `npm run db:reset`    | Drop all tables and re-migrate (destructive)  |
-| `npm run db:studio`   | Open Prisma Studio (DB browser)               |
-| `supabase start`      | Start local Supabase stack                    |
-| `supabase stop`       | Stop local Supabase stack                     |
-| `supabase db reset`   | Reset local Supabase DB                       |
-
-## Connecting to Remote Supabase (Dev/Staging)
-
-To point at the cloud Supabase project instead of local:
-
-1. Get credentials from Supabase Dashboard → Project Settings
-2. Update `.env.local` with the remote values (see `.env.local.example` for the format)
-3. Run `npm run db:migrate` to apply migrations to the remote DB
-4. Apply RLS policy in the Supabase SQL Editor:
-
-```sql
-ALTER TABLE "Idea" ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can only access their own ideas"
-  ON "Idea" FOR ALL
-  USING (auth.uid()::text = "userId");
-```
+| Command                     | What it does                                        |
+| --------------------------- | --------------------------------------------------- |
+| `npm run dev`               | Start Next.js dev server                            |
+| `npm run build`             | Production build                                    |
+| `npm run db:generate`       | Regenerate Prisma client after schema changes       |
+| `npm run db:migrate`        | Create and run a development migration              |
+| `npm run db:reset`          | Drop all tables and re-migrate (destructive)        |
+| `npm run db:studio`         | Open Prisma Studio (DB browser)                     |
+| `npx prisma migrate deploy` | Apply committed migrations to the Supabase database |
