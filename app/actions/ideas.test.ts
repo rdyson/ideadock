@@ -8,6 +8,12 @@ const createManyMock = vi.fn();
 const transactionMock = vi.fn();
 const anthropicCreateMock = vi.fn();
 
+vi.mock("next/server", () => ({
+  after: (fn: () => unknown) => {
+    void fn();
+  },
+}));
+
 vi.mock("@/lib/supabase/server", () => ({
   createClient: () => ({
     auth: { getUser: getUserMock },
@@ -102,6 +108,25 @@ describe("createIdea", () => {
         userId: "user-1",
         title: "a".repeat(120),
         rawText: longText,
+        status: "PENDING",
+      },
+    });
+  });
+
+  it("uses only the first line as placeholder title when rawText has line breaks", async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    const text = "Catchy headline\n\nLonger description on subsequent lines.";
+    createIdeaMock.mockResolvedValue({ id: "idea-789", rawText: text });
+    updateIdeaMock.mockResolvedValue({ id: "idea-789", rawText: text });
+    anthropicCreateMock.mockResolvedValue(validClaudeResponse());
+
+    await createIdea(text);
+
+    expect(createIdeaMock).toHaveBeenCalledWith({
+      data: {
+        userId: "user-1",
+        title: "Catchy headline",
+        rawText: text,
         status: "PENDING",
       },
     });

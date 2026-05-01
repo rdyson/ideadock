@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { Prisma, ResearchCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { anthropic, RESEARCH_MODEL } from "@/lib/anthropic";
@@ -42,7 +43,8 @@ const TITLE_MAX = 80;
 const PLACEHOLDER_TITLE_MAX = 120;
 
 function placeholderTitle(rawText: string): string {
-  return rawText.slice(0, PLACEHOLDER_TITLE_MAX);
+  const firstLine = rawText.split(/\r?\n/, 1)[0].trim();
+  return firstLine.slice(0, PLACEHOLDER_TITLE_MAX);
 }
 
 function cleanClaudeTitle(raw: unknown): string | null {
@@ -79,7 +81,7 @@ export async function createIdea(rawText: string): Promise<string> {
     },
   });
 
-  void triggerResearch(idea.id);
+  after(() => triggerResearch(idea.id));
 
   return idea.id;
 }
@@ -119,6 +121,8 @@ export async function updateIdea(ideaId: string, rawText: string): Promise<void>
     where: { id: ideaId },
     data: { rawText: trimmed, title },
   });
+
+  redirect(`/ideas/${ideaId}`);
 }
 
 export async function deleteIdea(ideaId: string): Promise<void> {
@@ -141,7 +145,7 @@ export async function rerunResearch(ideaId: string): Promise<void> {
     }),
   ]);
 
-  void triggerResearch(ideaId);
+  after(() => triggerResearch(ideaId));
 }
 
 export async function triggerResearch(ideaId: string): Promise<void> {

@@ -32,9 +32,11 @@ export default function EditIdeaForm({
 
     try {
       await updateIdea(ideaId, trimmed);
-      router.push(`/ideas/${ideaId}`);
-      router.refresh();
     } catch (err) {
+      const digest = (err as { digest?: unknown })?.digest;
+      if (typeof digest === "string" && digest.startsWith("NEXT_REDIRECT")) {
+        throw err;
+      }
       const message = err instanceof Error ? err.message : "Failed to update idea";
       if (message === "Not authenticated") {
         router.push("/login");
