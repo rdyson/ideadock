@@ -3,8 +3,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const getUserMock = vi.fn();
 const createIdeaMock = vi.fn();
 const updateIdeaMock = vi.fn();
+const updateManyIdeaMock = vi.fn();
 const findUniqueIdeaMock = vi.fn();
+const findUniqueOrThrowIdeaMock = vi.fn();
 const createManyMock = vi.fn();
+const deleteManySectionMock = vi.fn();
 const transactionMock = vi.fn();
 const anthropicCreateMock = vi.fn();
 
@@ -25,10 +28,13 @@ vi.mock("@/lib/prisma", () => ({
     idea: {
       create: (...args: unknown[]) => createIdeaMock(...args),
       update: (...args: unknown[]) => updateIdeaMock(...args),
+      updateMany: (...args: unknown[]) => updateManyIdeaMock(...args),
       findUnique: (...args: unknown[]) => findUniqueIdeaMock(...args),
+      findUniqueOrThrow: (...args: unknown[]) => findUniqueOrThrowIdeaMock(...args),
     },
     researchSection: {
       createMany: (...args: unknown[]) => createManyMock(...args),
+      deleteMany: (...args: unknown[]) => deleteManySectionMock(...args),
     },
     $transaction: (...args: unknown[]) => transactionMock(...args),
   },
@@ -58,6 +64,7 @@ import { triggerResearch } from "@/lib/research";
 beforeEach(() => {
   vi.clearAllMocks();
   transactionMock.mockResolvedValue(undefined);
+  updateManyIdeaMock.mockResolvedValue({ count: 1 });
 });
 
 const OMIT_TITLE = Symbol("omit-title");
@@ -136,37 +143,33 @@ describe("createIdea", () => {
   it("fires triggerResearch without awaiting it", async () => {
     getUserMock.mockResolvedValue({ data: { user: { id: "user-1" } } });
     createIdeaMock.mockResolvedValue({ id: "idea-456", rawText: "hi" });
-    updateIdeaMock.mockResolvedValue({ id: "idea-456", rawText: "hi" });
+    findUniqueOrThrowIdeaMock.mockResolvedValue({ rawText: "hi" });
     anthropicCreateMock.mockResolvedValue(validClaudeResponse());
 
     await createIdea("hi");
 
-    expect(updateIdeaMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: "idea-456" },
-        data: { status: "RESEARCHING" },
-      }),
-    );
+    expect(updateManyIdeaMock).toHaveBeenCalledWith({
+      where: { id: "idea-456", status: { not: "RESEARCHING" } },
+      data: { status: "RESEARCHING" },
+    });
   });
 });
 
 describe("triggerResearch", () => {
   it("walks PENDING -> RESEARCHING -> READY and persists sections + score", async () => {
-    updateIdeaMock.mockResolvedValue({
-      id: "idea-1",
-      rawText: "interesting idea",
-    });
+    findUniqueOrThrowIdeaMock.mockResolvedValue({ rawText: "interesting idea" });
     anthropicCreateMock.mockResolvedValue(validClaudeResponse());
 
     await triggerResearch("idea-1");
 
-    expect(updateIdeaMock).toHaveBeenNthCalledWith(1, {
-      where: { id: "idea-1" },
+    expect(updateManyIdeaMock).toHaveBeenCalledWith({
+      where: { id: "idea-1", status: { not: "RESEARCHING" } },
       data: { status: "RESEARCHING" },
     });
     expect(anthropicCreateMock).toHaveBeenCalledTimes(1);
     const txArg = transactionMock.mock.calls[0][0];
     expect(Array.isArray(txArg)).toBe(true);
+    expect(deleteManySectionMock).toHaveBeenCalledWith({ where: { ideaId: "idea-1" } });
     expect(createManyMock).toHaveBeenCalledWith({
       data: expect.arrayContaining([
         expect.objectContaining({
@@ -187,8 +190,21 @@ describe("triggerResearch", () => {
     });
   });
 
+  it("bails out without calling Anthropic when another run already holds the claim", async () => {
+    updateManyIdeaMock.mockResolvedValueOnce({ count: 0 });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await triggerResearch("idea-busy");
+
+    expect(anthropicCreateMock).not.toHaveBeenCalled();
+    expect(findUniqueOrThrowIdeaMock).not.toHaveBeenCalled();
+    expect(transactionMock).not.toHaveBeenCalled();
+    expect(updateIdeaMock).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+  });
+
   it("falls back to keeping existing title when Claude omits title", async () => {
-    updateIdeaMock.mockResolvedValue({ id: "idea-notitle", rawText: "x" });
+    findUniqueOrThrowIdeaMock.mockResolvedValue({ rawText: "x" });
     anthropicCreateMock.mockResolvedValue(validClaudeResponse([10, 10, 10, 10, 10], OMIT_TITLE));
 
     await triggerResearch("idea-notitle");
@@ -199,7 +215,7 @@ describe("triggerResearch", () => {
   });
 
   it("trims whitespace and caps Claude-generated title at 80 chars", async () => {
-    updateIdeaMock.mockResolvedValue({ id: "idea-long", rawText: "x" });
+    findUniqueOrThrowIdeaMock.mockResolvedValue({ rawText: "x" });
     const longTitle = "  " + "t".repeat(200) + "  ";
     anthropicCreateMock.mockResolvedValue(validClaudeResponse([10, 10, 10, 10, 10], longTitle));
 
@@ -210,7 +226,7 @@ describe("triggerResearch", () => {
   });
 
   it("clamps out-of-range and non-numeric scores to [0,20]", async () => {
-    updateIdeaMock.mockResolvedValue({ id: "idea-2", rawText: "x" });
+    findUniqueOrThrowIdeaMock.mockResolvedValue({ rawText: "x" });
     anthropicCreateMock.mockResolvedValue({
       content: [
         {
@@ -253,7 +269,7 @@ describe("triggerResearch", () => {
   });
 
   it("transitions to ERROR when Claude returns no text block", async () => {
-    updateIdeaMock.mockResolvedValue({ id: "idea-3", rawText: "x" });
+    findUniqueOrThrowIdeaMock.mockResolvedValue({ rawText: "x" });
     anthropicCreateMock.mockResolvedValue({ content: [] });
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -269,7 +285,7 @@ describe("triggerResearch", () => {
   });
 
   it("transitions to ERROR when Claude returns invalid JSON", async () => {
-    updateIdeaMock.mockResolvedValue({ id: "idea-4", rawText: "x" });
+    findUniqueOrThrowIdeaMock.mockResolvedValue({ rawText: "x" });
     anthropicCreateMock.mockResolvedValue({
       content: [{ type: "text", text: "not-json" }],
     });
@@ -283,7 +299,7 @@ describe("triggerResearch", () => {
   });
 
   it("transitions to ERROR when Anthropic call throws", async () => {
-    updateIdeaMock.mockResolvedValue({ id: "idea-5", rawText: "x" });
+    findUniqueOrThrowIdeaMock.mockResolvedValue({ rawText: "x" });
     anthropicCreateMock.mockRejectedValue(new Error("network down"));
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 

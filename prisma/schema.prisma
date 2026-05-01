@@ -47,5 +47,6 @@ model ResearchSection {
   sources   Json             @default("[]")
   createdAt DateTime         @default(now())
 
+  @@unique([ideaId, category])
   @@index([ideaId])
 }

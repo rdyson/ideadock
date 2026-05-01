@@ -49,10 +49,22 @@ function clampScore(n: unknown): number {
 }
 
 export async function triggerResearch(ideaId: string): Promise<void> {
+  // Atomic claim: only one runner can hold the RESEARCHING status at a time.
+  // updateMany returns count=0 if another invocation already claimed the idea,
+  // preventing duplicate Anthropic calls and section writes from concurrent reruns.
+  const claim = await prisma.idea.updateMany({
+    where: { id: ideaId, status: { not: "RESEARCHING" } },
+    data: { status: "RESEARCHING" },
+  });
+  if (claim.count === 0) {
+    console.log("[triggerResearch] skip: another run already in progress", ideaId);
+    return;
+  }
+
   try {
-    const idea = await prisma.idea.update({
+    const idea = await prisma.idea.findUniqueOrThrow({
       where: { id: ideaId },
-      data: { status: "RESEARCHING" },
+      select: { rawText: true },
     });
 
     const message = await anthropic.messages.create({
@@ -90,6 +102,7 @@ export async function triggerResearch(ideaId: string): Promise<void> {
     const generatedTitle = cleanClaudeTitle(parsed.title);
 
     await prisma.$transaction([
+      prisma.researchSection.deleteMany({ where: { ideaId } }),
       prisma.researchSection.createMany({ data: scoredSections }),
       prisma.idea.update({
         where: { id: ideaId },
