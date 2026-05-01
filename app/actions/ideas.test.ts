@@ -52,7 +52,8 @@ vi.mock("@prisma/client", () => ({
   Prisma: {},
 }));
 
-import { createIdea, triggerResearch } from "./ideas";
+import { createIdea } from "./ideas";
+import { triggerResearch } from "@/lib/research";
 
 beforeEach(() => {
   vi.clearAllMocks();
