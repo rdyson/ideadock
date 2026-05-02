@@ -5,6 +5,7 @@ import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { triggerResearch } from "@/lib/research";
+import { enforceLimit } from "@/lib/ratelimit";
 
 const PLACEHOLDER_TITLE_MAX = 120;
 
@@ -22,6 +23,8 @@ export async function createIdea(rawText: string): Promise<string> {
   if (!user) {
     throw new Error("Not authenticated");
   }
+
+  await enforceLimit("ideaCreate", user.id);
 
   const trimmed = rawText.trim();
   const title = placeholderTitle(trimmed);
@@ -90,6 +93,7 @@ export async function deleteIdea(ideaId: string): Promise<void> {
 export async function rerunResearch(ideaId: string): Promise<void> {
   const userId = await requireUserId();
   await assertIdeaOwner(ideaId, userId);
+  await enforceLimit("researchRerun", userId);
 
   await prisma.$transaction([
     prisma.researchSection.deleteMany({ where: { ideaId } }),

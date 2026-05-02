@@ -6,10 +6,12 @@ const updateIdeaMock = vi.fn();
 const updateManyIdeaMock = vi.fn();
 const findUniqueIdeaMock = vi.fn();
 const findUniqueOrThrowIdeaMock = vi.fn();
+const deleteIdeaMock = vi.fn();
 const createManyMock = vi.fn();
 const deleteManySectionMock = vi.fn();
 const transactionMock = vi.fn();
 const anthropicCreateMock = vi.fn();
+const enforceLimitMock = vi.fn();
 
 vi.mock("next/server", () => ({
   after: (fn: () => unknown) => {
@@ -31,6 +33,7 @@ vi.mock("@/lib/prisma", () => ({
       updateMany: (...args: unknown[]) => updateManyIdeaMock(...args),
       findUnique: (...args: unknown[]) => findUniqueIdeaMock(...args),
       findUniqueOrThrow: (...args: unknown[]) => findUniqueOrThrowIdeaMock(...args),
+      delete: (...args: unknown[]) => deleteIdeaMock(...args),
     },
     researchSection: {
       createMany: (...args: unknown[]) => createManyMock(...args),
@@ -39,6 +42,14 @@ vi.mock("@/lib/prisma", () => ({
     $transaction: (...args: unknown[]) => transactionMock(...args),
   },
 }));
+
+vi.mock("@/lib/ratelimit", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/ratelimit")>("@/lib/ratelimit");
+  return {
+    ...actual,
+    enforceLimit: (...args: unknown[]) => enforceLimitMock(...args),
+  };
+});
 
 vi.mock("@/lib/anthropic", () => ({
   anthropic: {
@@ -58,13 +69,15 @@ vi.mock("@prisma/client", () => ({
   Prisma: {},
 }));
 
-import { createIdea } from "./ideas";
+import { createIdea, rerunResearch } from "./ideas";
 import { triggerResearch } from "@/lib/research";
+import { RateLimitError } from "@/lib/ratelimit";
 
 beforeEach(() => {
   vi.clearAllMocks();
   transactionMock.mockResolvedValue(undefined);
   updateManyIdeaMock.mockResolvedValue({ count: 1 });
+  enforceLimitMock.mockResolvedValue(undefined);
 });
 
 const OMIT_TITLE = Symbol("omit-title");
@@ -152,6 +165,45 @@ describe("createIdea", () => {
       where: { id: "idea-456", status: { not: "RESEARCHING" } },
       data: { status: "RESEARCHING" },
     });
+  });
+
+  it("blocks creation and skips DB write when rate limit is exceeded", async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    enforceLimitMock.mockRejectedValueOnce(
+      new RateLimitError("Daily limit reached. Try again in about 5h.", Date.now() + 3600_000),
+    );
+
+    await expect(createIdea("a new idea")).rejects.toThrow(RateLimitError);
+
+    expect(enforceLimitMock).toHaveBeenCalledWith("ideaCreate", "user-1");
+    expect(createIdeaMock).not.toHaveBeenCalled();
+    expect(updateManyIdeaMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("rerunResearch", () => {
+  it("blocks rerun and skips transaction when rate limit is exceeded", async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    findUniqueIdeaMock.mockResolvedValue({ userId: "user-1" });
+    enforceLimitMock.mockRejectedValueOnce(
+      new RateLimitError("Daily limit reached. Try again in about 5h.", Date.now() + 3600_000),
+    );
+
+    await expect(rerunResearch("idea-rl")).rejects.toThrow(RateLimitError);
+
+    expect(enforceLimitMock).toHaveBeenCalledWith("researchRerun", "user-1");
+    expect(transactionMock).not.toHaveBeenCalled();
+    expect(updateManyIdeaMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects when caller does not own the idea (before checking rate limit)", async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    findUniqueIdeaMock.mockResolvedValue({ userId: "someone-else" });
+
+    await expect(rerunResearch("idea-other")).rejects.toThrow("Idea not found");
+
+    expect(enforceLimitMock).not.toHaveBeenCalled();
+    expect(transactionMock).not.toHaveBeenCalled();
   });
 });
 
