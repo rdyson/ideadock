@@ -36,7 +36,7 @@ type ResearchResponse = {
 
 const TITLE_MAX = 80;
 
-function cleanClaudeTitle(raw: unknown): string | null {
+function cleanGeneratedTitle(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   const trimmed = raw.trim().replace(/\s+/g, " ");
   if (trimmed.length === 0) return null;
@@ -82,7 +82,7 @@ export async function triggerResearch(ideaId: string): Promise<void> {
       (b: (typeof message.content)[number]) => b.type === "text",
     );
     if (!textBlock || textBlock.type !== "text") {
-      throw new Error("No text block in Claude response");
+      throw new Error("No text block in AI response");
     }
 
     let jsonText = textBlock.text.trim();
@@ -99,7 +99,7 @@ export async function triggerResearch(ideaId: string): Promise<void> {
       sources: s.sources ?? [],
     }));
     const readinessScore = scoredSections.reduce((acc, s) => acc + s.score, 0);
-    const generatedTitle = cleanClaudeTitle(parsed.title);
+    const generatedTitle = cleanGeneratedTitle(parsed.title);
 
     await prisma.$transaction([
       prisma.researchSection.deleteMany({ where: { ideaId } }),

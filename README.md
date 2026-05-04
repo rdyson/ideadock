@@ -11,7 +11,7 @@ An AI-powered idea research assistant for founders. Submit a raw idea; a researc
 - Next.js 16 (App Router) + TypeScript
 - Postgres via Supabase
 - Prisma ORM
-- Claude Sonnet 4.6 for the research agent
+- OpenAI or Claude Sonnet 4.6 for the research agent
 - Tailwind CSS
 - Vercel (deploy target)
 
@@ -19,7 +19,7 @@ An AI-powered idea research assistant for founders. Submit a raw idea; a researc
 
 - Node.js 20+
 - A Supabase cloud project
-- An [Anthropic API key](https://console.anthropic.com/)
+- An [OpenAI API key](https://platform.openai.com/api-keys) or [Anthropic API key](https://console.anthropic.com/)
 
 ## Local Development Setup
 
@@ -37,14 +37,19 @@ npm install
 cp .env.local.example .env.local
 ```
 
-Fill in the remote Supabase and Anthropic values:
+Fill in the remote Supabase and AI provider values:
 
 ```
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:6543/postgres?pgbouncer=true&connection_limit=1"
 DIRECT_URL="postgresql://USER:PASSWORD@HOST:5432/postgres"
 NEXT_PUBLIC_SUPABASE_URL="https://YOUR-PROJECT-REF.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon key from Supabase Project Settings > API>"
-ANTHROPIC_API_KEY="<your Anthropic API key>"
+AI_PROVIDER="openai"
+OPENAI_API_KEY="<your OpenAI API key>"
+OPENAI_MODEL="gpt-4o-mini"
+# Or use Anthropic instead:
+# AI_PROVIDER="anthropic"
+# ANTHROPIC_API_KEY="<your Anthropic API key>"
 ```
 
 Use the Supabase transaction pooler URL for `DATABASE_URL` and the direct database URL for `DIRECT_URL`.
